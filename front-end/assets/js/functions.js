@@ -1,4 +1,4 @@
-const API_BASE = "bookstore-managment-system-production.up.railway.app";
+const API_BASE = "https://bookstore-managment-system-production.up.railway.app/";
 let jwtToken = localStorage.getItem("jwt");
 let bookToDelete = null;
 
