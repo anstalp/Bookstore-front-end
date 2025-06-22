@@ -1,5 +1,5 @@
 // Book management functions
-const API_BASE = "https://bookstore-managment-system-production.up.railway.app/";
+const API_BASE = "https://bookstore-managment-system-production.up.railway.app";
 
 export async function loadBooksSection() {
     const jwtToken = localStorage.getItem('jwt');
