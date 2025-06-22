@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Αγαπημένα</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <button onclick="window.location.href='dashboard.html'">🏠 Αρχική</button>
+            <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+        </nav>
+    </header>
+
+    <div id="content"></div>
+
+    <script src="../../assets/js/functions.js"></script>
+    <script>
+        if (!localStorage.getItem('jwt')) window.location.href = '../../index.html';
+        showSection('favorites');
+    </script>
+</body>
+</html>

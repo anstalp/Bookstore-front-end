@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <title>Διαχείριση Βιβλίων</title>
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+  <style>
+    .action-buttons {
+      display: flex;
+      gap: 0.5em;
+      margin-top: 1em;
+    }
+
+    .search-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 768px) {
+      .search-container {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+
+    .search-box {
+      display: flex;
+      gap: 0.5rem;
+      flex: 1;
+      max-width: 600px;
+    }
+
+    .search-box input {
+      flex: 1;
+    }
+
+    .add-button {
+      white-space: nowrap;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: var(--card-background);
+      margin: 10% auto;
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+    }
+
+    .modal-content h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+
+    .form-actions button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+    }
+
+    .form-actions button[type="submit"] {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .form-actions button[type="button"] {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <button onclick="window.location.href='/pages/employee/dashboard.html'">🏠 Αρχική</button>
+      <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+    </nav>
+  </header>
+
+  <div class="search-container">
+    <div class="search-box">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Αναζήτηση βιβλίου..."
+      />
+      <button id="searchBtn" class="search-btn">Αναζήτηση</button>
+    </div>
+    <button class="add-button" onclick="newBook()">➕ Νέο Βιβλίο</button>
+  </div>
+
+  <div id="content"></div>
+
+  <!-- Modal για προσθήκη/επεξεργασία βιβλίου -->
+  <div id="bookModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3 id="modalTitle">Νέο Βιβλίο</h3>
+      <form id="bookForm" onsubmit="handleBookSubmit(event)">
+        <input type="hidden" id="bookId">
+        <input type="text" id="bookTitle" placeholder="Τίτλος" required>
+        <input type="text" id="bookAuthor" placeholder="Συγγραφέας" required>
+        <input type="text" id="bookIsbn" placeholder="ISBN" required>
+        <input type="number" id="bookPrice" placeholder="Τιμή" step="0.01" required>
+        <input type="number" id="bookStock" placeholder="Ποσότητα" required>
+        <input type="date" id="bookReleaseDate" required>
+        <div class="form-actions">
+          <button type="submit">Αποθήκευση</button>
+          <button type="button" onclick="closeModal()">Άκυρο</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Alert Modal -->
+  <div id="alertModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3 id="alertTitle">Ειδοποίηση</h3>
+      <p id="alertMessage"></p>
+      <div class="form-actions">
+        <button onclick="closeAlertModal()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3>Επιβεβαίωση</h3>
+      <p>Είστε σίγουρος ότι θέλετε να διαγράψετε αυτό το βιβλίο;</p>
+      <div class="form-actions">
+        <button onclick="confirmDelete()" class="delete-btn">Ναι</button>
+        <button onclick="closeConfirmModal()">Όχι</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/js/functions.js"></script>
+  <script>
+    if (!localStorage.getItem("jwt")) window.location.href = "../../index.html";
+    
+    let allBooks = [];
+    
+    async function renderBooks() {
+      allBooks = await fetchBooks();
+      displayBooksEmployee(allBooks);
+    }
+
+    function newBook() {
+      document.getElementById("bookId").value = "";
+      document.getElementById("bookTitle").value = "";
+      document.getElementById("bookAuthor").value = "";
+      document.getElementById("bookIsbn").value = "";
+      document.getElementById("bookPrice").value = "";
+      document.getElementById("bookStock").value = "";
+      document.getElementById("bookReleaseDate").value = "";
+      document.getElementById("modalTitle").textContent = "Νέο Βιβλίο";
+      document.getElementById("bookModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("bookModal").style.display = "none";
+    }
+
+    function showAlert(title, message) {
+      document.getElementById("alertTitle").textContent = title;
+      document.getElementById("alertMessage").textContent = message;
+      document.getElementById("alertModal").style.display = "block";
+    }
+
+    function closeAlertModal() {
+      document.getElementById("alertModal").style.display = "none";
+    }
+
+    function showConfirmModal(bookId) {
+      bookToDelete = bookId;
+      document.getElementById("confirmModal").style.display = "block";
+    }
+
+    function closeConfirmModal() {
+      document.getElementById("confirmModal").style.display = "none";
+      bookToDelete = null;
+    }
+
+    async function confirmDelete() {
+      if (!bookToDelete) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/v1/books/${bookToDelete}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${jwtToken}` }
+        });
+
+        if (response.ok) {
+          closeConfirmModal();
+          renderBooks();
+          showAlert("Επιτυχία", "Το βιβλίο διαγράφηκε επιτυχώς!");
+        } else {
+          showAlert("Σφάλμα", "Σφάλμα διαγραφής βιβλίου!");
+        }
+      } catch (error) {
+        showAlert("Σφάλμα", "Σφάλμα: " + error.message);
+      }
+    }
+
+    async function handleBookSubmit(e) {
+      e.preventDefault();
+      
+      const releaseDate = document.getElementById("bookReleaseDate").value;
+      
+      const bookData = {
+        title: document.getElementById("bookTitle").value,
+        author: document.getElementById("bookAuthor").value,
+        isbn: document.getElementById("bookIsbn").value,
+        price: parseFloat(document.getElementById("bookPrice").value),
+        stock: parseInt(document.getElementById("bookStock").value),
+        releaseDate: releaseDate
+      };
+
+      const bookId = document.getElementById("bookId").value;
+      const method = bookId ? "PUT" : "POST";
+      const url = bookId ? `${API_BASE}/api/v1/books/${bookId}` : `${API_BASE}/api/v1/books`;
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${jwtToken}`
+          },
+          body: JSON.stringify(bookData)
+        });
+
+        if (response.ok) {
+          closeModal();
+          renderBooks();
+          showAlert("Επιτυχία", "Το βιβλίο αποθηκεύτηκε επιτυχώς!");
+        } else {
+          let errorMessage = "Σφάλμα αποθήκευσης βιβλίου!";
+          try {
+            const responseData = await response.json();
+            errorMessage += " " + (responseData.message || "");
+          } catch (e) {
+            
+          }
+          showAlert("Σφάλμα", errorMessage);
+        }
+      } catch (error) {
+        showAlert("Σφάλμα", "Σφάλμα: " + error.message);
+      }
+    }
+
+    async function performSearch() {
+      const searchTerm = document.getElementById("searchInput").value;
+      const filteredBooks = allBooks.filter(book => 
+        book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.isbn.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      if (filteredBooks.length === 0) {
+        document.getElementById("content").innerHTML = '<div class="no-results">Το βιβλίο δεν υπάρχει</div>';
+        return;
+      }
+      
+      displayBooksEmployee(filteredBooks);
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", performSearch);
+
+    document.getElementById("searchInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        performSearch();
+      }
+    });
+
+    renderBooks();
+  </script>
+</body>
+</html>

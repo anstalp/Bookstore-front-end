@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Λεπτομέρειες Πελάτη</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <style>
+        .customer-card {
+            max-width: 500px;
+            margin: 2em auto;
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 1.5em;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        
+        .customer-card h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1.5em;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .center { text-align: center; }
+        
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 90%;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        
+        th { background: #eee; }
+        
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 2em;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .delete-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1em;
+        }
+        
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .employee-purchase {
+            max-width: 500px;
+            margin: 2em auto;
+            padding: 1.5em;
+            background: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        .employee-purchase h3 {
+            color: var(--primary-color);
+            margin-bottom: 1em;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .employee-purchase input,
+        .employee-purchase select {
+            width: 100%;
+            padding: 0.5em;
+            margin-bottom: 1em;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        .employee-purchase button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .employee-purchase button:hover {
+            opacity: 0.9;
+        }
+
+        .employee-purchase select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        /* Βελτιωμένο στυλ για τα alerts */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2em;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-content h3 {
+            color: var(--primary-color);
+            margin: 0 0 1em 0;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .modal-content p {
+            margin: 1em 0;
+            text-align: center;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .modal-content .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1em;
+            margin-top: 1.5em;
+        }
+
+        .modal-content button {
+            padding: 0.8em 2em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .modal-content button:first-child {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .modal-content button:first-child:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .modal-content button:last-child {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-content button:last-child:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Ειδικά στυλ για διαφορετικά είδη μηνυμάτων */
+        .modal-content.success h3 {
+            color: #28a745;
+        }
+
+        .modal-content.error h3 {
+            color: #dc3545;
+        }
+
+        .modal-content.warning h3 {
+            color: #ffc107;
+        }
+
+        .modal-content.info h3 {
+            color: #17a2b8;
+        }
+
+        /* Modal επιβεβαίωσης διαγραφής */
+        .confirm-delete-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .confirm-delete-modal .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2em;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .confirm-delete-modal .modal-content h3 {
+            color: #dc3545;
+            margin-bottom: 1em;
+        }
+
+        .confirm-delete-modal .modal-content p {
+            margin-bottom: 1.5em;
+            color: #666;
+        }
+
+        .confirm-delete-modal .modal-content .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1em;
+        }
+
+        .confirm-delete-modal .modal-content button {
+            padding: 0.8em 2em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .confirm-delete-modal .modal-content button:first-child {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .confirm-delete-modal .modal-content button:last-child {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .confirm-delete-modal .modal-content button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .delete-purchase-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+
+        .delete-purchase-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .table-container {
+            max-width: 800px;
+            margin: 2em auto;
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 1.5em;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .table-container h3 {
+            color: var(--primary-color);
+            margin-bottom: 1em;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 2em;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <button onclick="window.location.href='customers.html'">⬅ Πίσω</button>
+            <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+        </nav>
+    </header>
+
+    <div id="customerCard" class="customer-card">
+        <h2>Λεπτομέρειες Πελάτη</h2>
+        <div id="customerDetails">
+            <p><strong>Όνομα:</strong> <span id="customerName"></span></p>
+            <p><strong>Email:</strong> <span id="customerEmail"></span></p>
+        </div>
+    </div>
+
+    <div class="employee-purchase">
+        <h3>Αγορά για Πελάτη</h3>
+        <select id="bookId" required>
+            <option value="">-- Επιλέξτε βιβλίο --</option>
+        </select>
+        <input type="number" id="quantity" placeholder="Ποσότητα" min="1">
+        <button onclick="submitEmployeePurchase()">Υποβολή</button>
+    </div>
+
+    <div class="table-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5em;">
+            <h3 style="color: var(--primary-color); font-size: 1.8rem; font-weight: 600; margin: 0;">Ιστορικό Αγορών</h3>
+            <button onclick="loadCustomerHistory()" style="background: var(--primary-color); color: white; border: none; padding: 0.5em 1em; border-radius: 4px; cursor: pointer;">🔄 Ανανέωση</button>
+        </div>
+        <div id="purchaseHistory"></div>
+    </div>
+
+    <div id="error-message" class="error-message"></div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="modal">
+        <div class="modal-content">
+            <h3 id="alertTitle">Ειδοποίηση</h3>
+            <p id="alertMessage"></p>
+            <div class="form-actions">
+                <button onclick="closeAlertModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal επιβεβαίωσης διαγραφής -->
+    <div id="confirmDeleteModal" class="confirm-delete-modal">
+        <div class="modal-content">
+            <h3>Επιβεβαίωση Διαγραφής</h3>
+            <p>Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή την αγορά;</p>
+            <div class="form-actions">
+                <button onclick="confirmPurchaseDelete()">Διαγραφή</button>
+                <button onclick="closePurchaseDeleteModal()">Άκυρο</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/functions.js"></script>
+    <script>
+        if (!localStorage.getItem("jwt")) window.location.href = "../index.html";
+        
+        function showAlert(title, message, type = 'info') {
+            const modal = document.getElementById("alertModal");
+            const modalContent = modal.querySelector('.modal-content');
+            const alertTitle = document.getElementById("alertTitle");
+            const alertMessage = document.getElementById("alertMessage");
+
+            modalContent.className = 'modal-content';
+            
+            modalContent.classList.add(type);
+
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            modal.style.display = "block";
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeAlertModal();
+                }
+            });
+        }
+
+        function closeAlertModal() {
+            const modal = document.getElementById("alertModal");
+            modal.style.display = "none";
+        }
+
+        function setErrorMessage(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.className = message ? 'error-message show' : 'error-message';
+        }
+
+        console.log("Loading customer details and history...");
+        loadCustomerDetails();
+        loadCustomerHistory();
+
+        async function loadCustomerDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const customerId = urlParams.get("id");
+            console.log("Customer ID from URL:", customerId);
+
+            if (!customerId) {
+                setErrorMessage("Δεν βρέθηκε πελάτης.");
+                document.getElementById('customerCard').innerHTML = "";
+                document.getElementById('purchaseHistory').innerHTML = "";
+                return;
+            }
+
+            setErrorMessage("");
+
+            try {
+                console.log("Fetching customer details...");
+                const response = await fetch(`${API_BASE}/api/v1/user/${customerId}`, {
+                    headers: { 
+                        Authorization: `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("Error response:", errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+                const user = await response.json();
+                console.log("Received user details:", user);
+                document.getElementById("customerName").textContent = user.name || 'N/A';
+                document.getElementById("customerEmail").textContent = user.email || 'N/A';
+            } catch (error) {
+                console.error("Error loading customer details:", error);
+                showAlert("Σφάλμα", "Σφάλμα φόρτωσης στοιχείων πελάτη: " + error.message);
+            }
+        }
+
+        async function getBookIdByTitle(bookTitle) {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/books`, {
+                    headers: { 
+                        Authorization: `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch books');
+                }
+
+                const books = await response.json();
+                const book = books.find(b => b.title === bookTitle);
+                return book ? book.id : null;
+            } catch (error) {
+                console.error('Error fetching book ID:', error);
+                return null;
+            }
+        }
+
+        async function loadCustomerHistory() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const customerId = urlParams.get("id");
+            console.log(`EMPLOYEE PAGE: Loading history for customer ID: ${customerId}`);
+
+            if (!customerId) {
+                setErrorMessage("Δεν βρέθηκε πελάτης.");
+                return;
+            }
+            setErrorMessage("");
+
+            try {
+                const purchasesEndpoint = `${API_BASE}/api/v1/purchases/user/${customerId}`;
+                console.log(`EMPLOYEE PAGE: Fetching from endpoint: ${purchasesEndpoint}`);
+
+                const purchasesResponse = await fetch(purchasesEndpoint, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+
+                if (!purchasesResponse.ok) {
+                    throw new Error(`Σφάλμα φόρτωσης αγορών: ${purchasesResponse.status}`);
+                }
+                const purchases = await purchasesResponse.json();
+                console.log("EMPLOYEE PAGE: Raw purchases data:", purchases);
+
+                const booksResponse = await fetch(`${API_BASE}/api/v1/books`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                if (!booksResponse.ok) {
+                    throw new Error('Σφάλμα φόρτωσης βιβλίων');
+                }
+                const allBooks = await booksResponse.json();
+
+                await displayOrders(purchases, allBooks);
+
+            } catch (error) {
+                console.error("EMPLOYEE PAGE: Error in loadCustomerHistory:", error);
+                showAlert("Σφάλμα", "Σφάλμα φόρτωσης ιστορικού: " + error.message);
+            }
+        }
+
+        async function displayOrders(purchases, allBooks) {
+            console.log("EMPLOYEE PAGE: displayOrders called with:", purchases);
+            const historyDiv = document.getElementById("purchaseHistory");
+
+            if (!purchases || purchases.length === 0) {
+                historyDiv.innerHTML = `<div class="no-results">Δεν βρέθηκαν αγορές για αυτόν τον πελάτη.</div>`;
+                return;
+            }
+
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Αγοράς</th>
+                            <th>Τίτλος Βιβλίου</th>
+                            <th>Ποσότητα</th>
+                            <th>Ημερομηνία</th>
+                            <th>Ενέργειες</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            for (const purchase of purchases) {
+                const book = allBooks.find(b => b.title === purchase.bookTitle);
+                const bookId = book ? book.id : null;
+
+                tableHtml += `
+                    <tr>
+                        <td>${purchase.id || 'N/A'}</td>
+                        <td>${purchase.bookTitle || 'N/A'}</td>
+                        <td>${purchase.quantity || 0}</td>
+                        <td>${purchase.purchaseDate ? new Date(purchase.purchaseDate).toLocaleDateString('el-GR') : 'N/A'}</td>
+                        <td>
+                            <button class="delete-purchase-btn" onclick='showPurchaseDeleteModal(${purchase.id}, ${bookId})'>Διαγραφή</button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            tableHtml += `</tbody></table>`;
+            historyDiv.innerHTML = tableHtml;
+        }
+
+        let purchaseToDelete = null;
+        let bookIdToDelete = null;
+
+        function showPurchaseDeleteModal(purchaseId, bookId) {
+            if (!bookId) {
+                showAlert('Σφάλμα', 'Δεν ήταν δυνατό να βρεθεί το ID του βιβλίου για διαγραφή.');
+                return;
+            }
+            purchaseToDelete = purchaseId;
+            bookIdToDelete = bookId;
+            document.getElementById('confirmDeleteModal').style.display = 'block';
+        }
+
+        function closePurchaseDeleteModal() {
+            document.getElementById('confirmDeleteModal').style.display = 'none';
+            purchaseToDelete = null;
+            bookIdToDelete = null;
+        }
+
+        async function confirmPurchaseDelete() {
+            const customerId = new URLSearchParams(window.location.search).get("id");
+            if (!purchaseToDelete || !bookIdToDelete || !customerId) {
+                showAlert("Σφάλμα", "Πληροφορίες διαγραφής ελλιπείς.");
+                closePurchaseDeleteModal();
+                return;
+            }
+
+            try {
+                const endpoint = `${API_BASE}/api/v1/purchases/user/${customerId}/book/${bookIdToDelete}`;
+                console.log(`EMPLOYEE PAGE: Deleting purchase via: ${endpoint}`);
+                const response = await fetch(endpoint, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+
+                if (response.ok) {
+                    showAlert("Επιτυχία", "Η αγορά διαγράφηκε!");
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(errorText || `Σφάλμα ${response.status}`);
+                }
+            } catch (error) {
+                console.error("EMPLOYEE PAGE: Delete error:", error);
+                showAlert("Σφάλμα", `Η διαγραφή απέτυχε: ${error.message}`);
+            } finally {
+                closePurchaseDeleteModal();
+                loadCustomerHistory(); 
+            }
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmDeleteModal');
+            if (event.target === modal) {
+                closePurchaseDeleteModal();
+            }
+        }
+
+        async function viewOrderDetails(orderId) {
+            try {
+                console.log("Fetching order details for ID:", orderId);
+                const response = await fetch(`${API_BASE}/api/v1/purchases/${orderId}`, {
+                    headers: { 
+                        Authorization: `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("Error response:", errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+                const purchase = await response.json();
+                console.log("Received purchase details:", purchase);
+                displayOrderDetails(purchase);
+            } catch (error) {
+                console.error("Error loading order details:", error);
+                showAlert("Σφάλμα", "Σφάλμα φόρτωσης λεπτομερειών παραγγελίας: " + error.message);
+            }
+
+        }
+
+        function displayOrderDetails(purchase) {
+            if (!purchase) {
+                showAlert("Σφάλμα", "Δεν βρέθηκαν λεπτομέρειες παραγγελίας");
+                return;
+            }
+
+            document.getElementById("purchaseHistory").innerHTML = `
+                <div class="order-details">
+                    <h3>Λεπτομέρειες Παραγγελίας #${purchase.id || 'N/A'}</h3>
+                    <p>Ημερομηνία: ${purchase.purchaseDate ? new Date(purchase.purchaseDate).toLocaleDateString('el-GR') : 'N/A'}</p>
+                    <p>Σύνολο: €${purchase.totalPrice ? purchase.totalPrice.toFixed(2) : '0.00'}</p>
+                    <p>Κατάσταση: ${purchase.status || 'N/A'}</p>
+                    
+                    <h4>Βιβλία</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Τίτλος</th>
+                                <th>Συγγραφέας</th>
+                                <th>Τιμή</th>
+                                <th>Ποσότητα</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(purchase.books || []).map(book => `
+                                <tr>
+                                    <td>${book.title || 'N/A'}</td>
+                                    <td>${book.author || 'N/A'}</td>
+                                    <td>€${book.price ? book.price.toFixed(2) : '0.00'}</td>
+                                    <td>${book.quantity || 0}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <button onclick="loadCustomerHistory()">← Επιστροφή στο Ιστορικό</button>
+                </div>
+            `;
+        }
+
+        async function loadBooks() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/books`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load books');
+                }
+
+                const books = await response.json();
+                const bookSelect = document.getElementById('bookId');
+                bookSelect.innerHTML = '<option value="">-- Επιλέξτε βιβλίο --</option>' +
+                    books.map(book => `<option value="${book.id}">${book.title} - ${book.author} (${book.price}€)</option>`).join('');
+            } catch (error) {
+                console.error('Error loading books:', error);
+                showAlert('Σφάλμα', 'Δεν ήταν δυνατή η φόρτωση των βιβλίων');
+            }
+        }
+
+        loadBooks();
+
+        async function submitEmployeePurchase() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const customerId = urlParams.get("id");
+            const bookId = document.getElementById('bookId').value;
+            const quantity = document.getElementById('quantity').value;
+
+            if (!bookId || !quantity) {
+                showAlert("Σφάλμα", "Παρακαλώ συμπληρώστε όλα τα πεδία");
+                return;
+            }
+
+            if (quantity <= 0) {
+                showAlert("Σφάλμα", "Η ποσότητα πρέπει να είναι μεγαλύτερη του 0");
+                return;
+            }
+
+            const request = {
+                customerId: parseInt(customerId),
+                bookId: parseInt(bookId),
+                quantity: parseInt(quantity)
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/purchases`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${jwtToken}`
+                    },
+                    body: JSON.stringify(request)
+                });
+
+                if (response.ok) {
+                    showAlert("Επιτυχία", "Η αγορά καταχωρήθηκε επιτυχώς!");
+                    document.getElementById('bookId').value = '';
+                    document.getElementById('quantity').value = '';
+                    
+                    setTimeout(() => {
+                        loadCustomerHistory();
+                    }, 1000);
+                } else {
+                    const errorText = await response.text();
+                    showAlert("Σφάλμα", "Σφάλμα καταχώρησης αγοράς: " + errorText);
+                }
+            } catch (error) {
+                console.error("Error submitting purchase:", error);
+                showAlert("Σφάλμα", "Σφάλμα δικτύου κατά την καταχώρηση της αγοράς");
+            }
+        }
+    </script>
+</body>
+</html>

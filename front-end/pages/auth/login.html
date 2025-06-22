@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Σύνδεση - Bookstore Portal</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>Σύνδεση</h2>
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="username">Email ή Username</label>
+                    <input type="text" id="username" name="username" required placeholder="Εισάγετε το email ή username σας">
+                </div>
+                <div class="form-group">
+                    <label for="password">Κωδικός</label>
+                    <input type="password" id="password" name="password" required placeholder="Εισάγετε τον κωδικό σας">
+                </div>
+                <button type="submit" class="primary-btn">Σύνδεση</button>
+            </form>
+            <div id="message" class="message"></div>
+            <p class="auth-link">Δεν έχετε λογαριασμό; <a href="register.html">Εγγραφείτε εδώ</a></p>
+        </div>
+    </div>
+    <script>
+        const API_BASE = "http://localhost:8080";
+        document.getElementById('login-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const messageDiv = document.getElementById('message');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/authenticate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: username, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('jwt', data.token);
+                    
+                    // Get user role from backend
+                    const userResponse = await fetch(`${API_BASE}/api/v1/user/me`, {
+                        headers: { 'Authorization': `Bearer ${data.token}` }
+                    });
+                    const user = await userResponse.json();
+                    
+                    switch(user.role) {
+                        case 'OWNER':
+                            window.location.href = '../owner/dashboard.html'; break;
+                        case 'EMPLOYEE':
+                            window.location.href = '../employee/dashboard.html'; break;
+                        default:
+                            window.location.href = '../customer/dashboard.html';
+                    }
+                    
+                } else {
+                    messageDiv.innerHTML = '<div class="error-message">Λάθος στοιχεία σύνδεσης</div>';
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error-message">Σφάλμα σύνδεσης</div>';
+            }
+        };
+    </script>
+</body>
+</html>

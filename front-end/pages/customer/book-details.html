@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Λεπτομέρειες Βιβλίου</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <style>
+        .book-details-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .book-header {
+            margin-bottom: 2rem;
+        }
+
+        .book-info {
+            width: 100%;
+        }
+
+        .book-title {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin: 0 0 1rem 0;
+        }
+
+        .book-author {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .book-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .meta-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .meta-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .meta-value {
+            font-size: 1.1rem;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+        }
+
+        .rating-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 0.25rem;
+            justify-content: center;
+        }
+
+        .star {
+            font-size: 2rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .star:hover,
+        .star.active {
+            color: gold;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+        }
+
+        .book-actions button {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .average-rating {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .book-header {
+                text-align: center;
+            }
+
+            .book-actions {
+                flex-direction: column;
+            }
+
+            .book-actions button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <button onclick="window.location.href='books.html'">⬅ Πίσω στα Βιβλία</button>
+            <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+        </nav>
+    </header>
+    <div id="book-details-content"></div>
+    <script src="../../assets/js/functions.js"></script>
+    <script>
+        if (!localStorage.getItem('jwt')) window.location.href = '../../index.html';
+
+        async function loadBookDetails() {
+            const params = new URLSearchParams(window.location.search);
+            const bookId = params.get('id');
+            if (!bookId) {
+                document.getElementById('book-details-content').innerHTML = "<p class='error-message'>Δεν βρέθηκε βιβλίο.</p>";
+                return;
+            }
+            const response = await fetch(`${API_BASE}/api/v1/books/${bookId}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` }
+            });
+            if (!response.ok) {
+                document.getElementById('book-details-content').innerHTML = "<p class='error-message'>Σφάλμα φόρτωσης βιβλίου.</p>";
+                return;
+            }
+            const book = await response.json();
+            document.getElementById('book-details-content').innerHTML = `
+                <div class="book-details-container">
+                    <div class="book-header">
+                        <div class="book-info">
+                            <h1 class="book-title">${book.title}</h1>
+                            <p class="book-author">${book.author}</p>
+                            <div class="book-meta">
+                                <div class="meta-item">
+                                    <div class="meta-label">Τιμή</div>
+                                    <div class="meta-value">€${book.price}</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Διαθεσιμότητα</div>
+                                    <div class="meta-value">${book.stock} διαθέσιμα</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">ISBN</div>
+                                    <div class="meta-value">${book.isbn || '-'}</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Ημερομηνία Κυκλοφορίας</div>
+                                    <div class="meta-value">${book.releaseDate || '-'}</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Βαθμολογία</div>
+                                    <div class="meta-value">${book.averageRating?.toFixed(2) || '-'}</div>
+                                </div>
+                                <div class="meta-item">
+                                    <div class="meta-label">Βαθμολόγησε</div>
+                                    <div class="meta-value">
+                                        <div class="star-rating" data-bookid="${book.id}">
+                                            ${[1,2,3,4,5].map(i => `
+                                                <span class="star" data-rating="${i}">★</span>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="book-actions">
+                        <button onclick="addToFavorites(${book.id})">❤️ Αγαπημένα</button>
+                    </div>
+                </div>
+            `;
+            setupStarRatings();
+        }
+
+        function setupStarRatings() {
+            document.querySelectorAll('.star-rating').forEach(ratingContainer => {
+                const bookId = ratingContainer.dataset.bookid;
+                const stars = ratingContainer.querySelectorAll('.star');
+                
+                stars.forEach(star => {
+                    star.addEventListener('click', async () => {
+                        const rating = parseInt(star.dataset.rating);
+                        try {
+                            const response = await fetch(`${API_BASE}/api/v1/books/${bookId}/rate?rating=${rating}`, {
+                                method: "POST",
+                                headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` }
+                            });
+                            if (response.ok) {
+                                // Update the stars to show the selected rating
+                                stars.forEach(s => {
+                                    s.classList.toggle('active', parseInt(s.dataset.rating) <= rating);
+                                });
+                                // Update just the average rating display
+                                const avgElem = document.querySelector('.meta-item:nth-child(5) .meta-value');
+                                if (avgElem) {
+                                    const bookResponse = await fetch(`${API_BASE}/api/v1/books/${bookId}`, {
+                                        headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` }
+                                    });
+                                    if (bookResponse.ok) {
+                                        const book = await bookResponse.json();
+                                        avgElem.textContent = book.averageRating?.toFixed(2) || '-';
+                                    }
+                                }
+                                showModalMessage("Η αξιολόγηση καταχωρήθηκε!");
+                            }
+                        } catch (error) {
+                            console.error('Error rating book:', error);
+                        }
+                    });
+                });
+            });
+        }
+
+        loadBookDetails();
+    </script>
+</body>
+</html>

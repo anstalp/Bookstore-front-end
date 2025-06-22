@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Λεπτομέρειες Εργαζομένου</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <style>
+        .employee-card {
+            max-width: 500px;
+            margin: 2em auto;
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 1.5em;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        .center { text-align: center; }
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 2em;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <button onclick="window.location.href='employees.html'">⬅ Πίσω</button>
+            <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+        </nav>
+    </header>
+
+    <div id="employeeCard" class="employee-card">
+        <h2>Λεπτομέρειες Εργαζομένου</h2>
+        <div id="employeeDetails">
+            <p><strong>Όνομα:</strong> <span id="employeeName"></span></p>
+            <p><strong>Email:</strong> <span id="employeeEmail"></span></p>
+            <p><strong>ID:</strong> <span id="employeeId"></span></p>
+            <p><strong>Ρόλος:</strong> <span id="employeeRole"></span></p>
+        </div>
+    </div>
+
+    <div id="error-message" class="error-message"></div>
+
+    <script src="../../assets/js/functions.js"></script>
+    <script>
+        // Εξασφάλιση ότι υπάρχει JWT
+        if (!localStorage.getItem("jwt")) window.location.href = "../index.html";
+        
+        function setErrorMessage(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.className = message ? 'error-message show' : 'error-message';
+        }
+
+        console.log("Loading employee details...");
+        loadEmployeeDetails();
+
+        async function loadEmployeeDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const employeeId = urlParams.get("id");
+            console.log("Employee ID from URL:", employeeId);
+
+            if (!employeeId) {
+                setErrorMessage("Δεν βρέθηκε εργαζόμενος.");
+                document.getElementById('employeeCard').innerHTML = "";
+                return;
+            }
+
+            setErrorMessage("");
+
+            try {
+                console.log("Fetching employee details...");
+                const response = await fetch(`${API_BASE}/api/v1/user/${employeeId}`, {
+                    headers: { 
+                        Authorization: `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("Error response:", errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+                const user = await response.json();
+                console.log("Received user details:", user);
+                document.getElementById("employeeId").textContent = user.id || 'N/A';
+                document.getElementById("employeeName").textContent = user.name || 'N/A';
+                document.getElementById("employeeEmail").textContent = user.email || 'N/A';
+                document.getElementById("employeeRole").textContent = user.role || 'N/A';
+            } catch (error) {
+                console.error("Error loading employee details:", error);
+                setErrorMessage("Σφάλμα φόρτωσης στοιχείων εργαζομένου: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html> 

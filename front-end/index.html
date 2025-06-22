@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore Portal</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="welcome-container">
+        <div class="welcome-content">
+        <h1>Καλώς ήρθατε στο Bookstore Portal</h1>
+            <p class="welcome-text">Ανακαλύψτε τον κόσμο των βιβλίων μαζί μας</p>
+        <div class="btn-group">
+                <button id="login-btn" class="primary-btn">Σύνδεση</button>
+                <button id="register-btn" class="secondary-btn">Εγγραφή</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('login-btn').onclick = () => {
+            window.location.href = 'pages/auth/login.html';
+        };
+        document.getElementById('register-btn').onclick = () => {
+            window.location.href = 'pages/auth/register.html';
+        };
+    </script>
+</body>
+</html>

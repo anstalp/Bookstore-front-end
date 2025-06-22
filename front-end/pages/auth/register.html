@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Εγγραφή - Bookstore Portal</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>Εγγραφή</h2>
+            <form id="register-form" class="auth-form">
+                <div class="form-group">
+                    <label for="name">Όνομα</label>
+                    <input type="text" id="name" name="name" required placeholder="Εισάγετε το όνομά σας">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="Εισάγετε το email σας">
+                </div>
+                <div class="form-group">
+                    <label for="password">Κωδικός</label>
+                    <input type="password" id="password" name="password" required placeholder="Εισάγετε τον κωδικό σας">
+                </div>
+                <button type="submit" class="primary-btn">Εγγραφή</button>
+            </form>
+            <div id="message" class="message"></div>
+            <p class="auth-link">Έχετε ήδη λογαριασμό; <a href="login.html">Συνδεθείτε εδώ</a></p>
+        </div>
+    </div>
+    <script>
+        const API_BASE = "http://localhost:8080";
+        document.getElementById('register-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const messageDiv = document.getElementById('message');
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+        
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                if (response.ok) {
+                    messageDiv.innerHTML = '<div class="success-message">Επιτυχής εγγραφή! Μπορείτε τώρα να συνδεθείτε.</div>';
+                    setTimeout(() => {
+                    window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    const errorData = await response.json();
+                    messageDiv.innerHTML = `<div class="error-message">${errorData.message || 'Σφάλμα εγγραφής'}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error-message">Σφάλμα εγγραφής</div>';
+            }
+        };
+    </script>
+</body>
+</html>

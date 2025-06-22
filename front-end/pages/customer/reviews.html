@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Αξιολογήσεις</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <style>
+        .add-review-btn { margin: 1em; padding: 0.5em 1em; }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <button onclick="window.location.href='dashboard.html'">🏠 Αρχική</button>
+            <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+        </nav>
+    </header>
+
+    <div id="content"></div>
+
+    <div id="reviewModal" class="modal">...</div>
+
+    <script src="../../assets/js/functions.js"></script>
+    <script>
+        if (!localStorage.getItem('jwt')) window.location.href = '../../index.html';
+        showSection('reviews');
+    </script>
+</body>
+</html>

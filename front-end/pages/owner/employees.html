@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="el">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Διαχείριση Εργαζομένων</title>
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <style>
+      .action-buttons {
+        display: flex;
+        gap: 0.5em;
+        margin-top: 1em;
+      }
+
+      .search-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        justify-content: center;
+        align-items: center;
+      }
+
+      @media (min-width: 768px) {
+        .search-container {
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      .search-box {
+        display: flex;
+        gap: 0.5rem;
+        flex: 1;
+        max-width: 600px;
+        justify-content: center;
+      }
+
+      .search-box input {
+        flex: 1;
+        max-width: 400px;
+      }
+
+      .add-button {
+        white-space: nowrap;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background-color: var(--card-background);
+        margin: 10% auto;
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        width: 90%;
+        max-width: 500px;
+        position: relative;
+      }
+
+      .modal-content h3 {
+        margin-top: 0;
+        color: var(--primary-color);
+      }
+
+      .modal-content input {
+        width: 100%;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1rem;
+      }
+
+      .form-actions button {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+      }
+
+      .form-actions button[type="submit"] {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .form-actions button[type="button"] {
+        background-color: #dc3545;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <button onclick="window.location.href='/pages/owner/dashboard.html'">
+          🏠 Αρχική
+        </button>
+        <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+      </nav>
+    </header>
+
+    <div class="search-container">
+      <div class="search-box">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Αναζήτηση εργαζομένου..."
+        />
+        <button id="searchBtn" class="search-btn">Αναζήτηση</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <div id="content"></div>
+    </div>
+
+    <!-- Modal για προσθήκη/επεξεργασία εργαζομένου -->
+    <div id="employeeModal" class="modal">
+      <div class="modal-content">
+        <h3 id="employeeModalTitle">Νέος Εργαζόμενος</h3>
+        <form id="employeeForm" onsubmit="handleEmployeeSubmit(event)">
+          <input type="hidden" id="employeeId" />
+          <div class="form-group">
+            <input type="text" id="employeeName" placeholder="Όνομα" required />
+          </div>
+          <div class="form-group">
+            <input type="email" id="employeeEmail" placeholder="Email" required />
+          </div>
+          <div class="form-group">
+            <input
+              type="password"
+              id="employeePassword"
+              placeholder="Κωδικός"
+              required
+            />
+          </div>
+          <div class="form-actions">
+            <button type="submit">Αποθήκευση</button>
+            <button type="button" onclick="closeEmployeeModal()">Άκυρο</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h3 id="alertTitle">Ειδοποίηση</h3>
+        <p id="alertMessage"></p>
+        <div class="form-actions">
+          <button onclick="closeAlertModal()">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../assets/js/functions.js"></script>
+    <script>
+      if (!localStorage.getItem("jwt")) window.location.href = "../../index.html";
+
+      let allEmployees = [];
+
+      async function loadEmployees() {
+        const response = await fetch(`${API_BASE}/api/v1/user`, {
+          headers: { Authorization: `Bearer ${jwtToken}` },
+        });
+        let allUsers = await response.json();
+        allEmployees = allUsers.filter((user) => user.role === "EMPLOYEE");
+        displayEmployees(allEmployees);
+      }
+
+      function displayEmployees(employees) {
+        document.getElementById('content').innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Όνομα</th>
+                        <th>Email</th>
+                        <th>Ενέργειες</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${employees.map(user => `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="view-btn" onclick="window.location.href='employee-details.html?id=${user.id}'">📋 Προβολή Λεπτομερειών</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+      }
+
+      async function performSearch() {
+        const searchTerm = document.getElementById("searchInput").value;
+        const filteredEmployees = allEmployees.filter(employee => 
+          employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          employee.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        if (filteredEmployees.length === 0) {
+          document.getElementById("content").innerHTML = '<div class="no-results">Ο εργαζόμενος δεν υπάρχει</div>';
+          return;
+        }
+        
+        displayEmployees(filteredEmployees);
+      }
+
+      document.getElementById("searchBtn").addEventListener("click", performSearch);
+
+      document.getElementById("searchInput").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+          performSearch();
+        }
+      });
+
+      function newEmployee() {
+        document.getElementById("employeeId").value = "";
+        document.getElementById("employeeName").value = "";
+        document.getElementById("employeeEmail").value = "";
+        document.getElementById("employeePassword").value = "";
+        document.getElementById("employeeModalTitle").textContent =
+          "Νέος Εργαζόμενος";
+        document.getElementById("employeeModal").style.display = "block";
+      }
+
+      async function editEmployee(id) {
+        const response = await fetch(`${API_BASE}/api/v1/user/${id}`, {
+          headers: { Authorization: `Bearer ${jwtToken}` },
+        });
+        const user = await response.json();
+        document.getElementById("employeeId").value = user.id;
+        document.getElementById("employeeName").value = user.name;
+        document.getElementById("employeeEmail").value = user.email;
+        document.getElementById("employeePassword").value = "";
+        document.getElementById("employeeModalTitle").textContent =
+          "Επεξεργασία Εργαζομένου";
+        document.getElementById("employeeModal").style.display = "block";
+      }
+
+      function closeEmployeeModal() {
+        document.getElementById("employeeModal").style.display = "none";
+      }
+
+      async function handleEmployeeSubmit(e) {
+        e.preventDefault();
+        const id = document.getElementById("employeeId").value;
+        const name = document.getElementById("employeeName").value;
+        const email = document.getElementById("employeeEmail").value;
+        const password = document.getElementById("employeePassword").value;
+
+        const method = id ? "PUT" : "POST";
+        const url = id
+          ? `${API_BASE}/api/v1/users/${id}`
+          : `${API_BASE}/api/v1/user`;
+
+        const body = id
+          ? JSON.stringify({
+              name,
+              email,
+              password: password ? password : undefined,
+            })
+          : JSON.stringify({ name, email, password, role: "EMPLOYEE" });
+
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        };
+
+        const response = await fetch(url, { method, headers, body });
+        if (response.ok) {
+          closeEmployeeModal();
+          loadEmployees();
+        } else {
+          showAlert("Σφάλμα", "Σφάλμα αποθήκευσης εργαζομένου!");
+        }
+      }
+
+      function showAlert(title, message) {
+        document.getElementById("alertTitle").textContent = title;
+        document.getElementById("alertMessage").textContent = message;
+        document.getElementById("alertModal").style.display = "block";
+      }
+
+      function closeAlertModal() {
+        document.getElementById("alertModal").style.display = "none";
+      }
+
+      loadEmployees();
+    </script>
+  </body>
+</html> 

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Βιβλία</title>
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+</head>
+<body>
+  <header>
+    <nav>
+      <button onclick="window.location.href='dashboard.html'">🏠 Αρχική</button>
+      <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+    </nav>
+  </header>
+
+  <div class="search-container">
+    <div class="search-box">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Αναζήτηση βιβλίου..."
+      />
+      <button id="searchBtn" class="search-btn">Αναζήτηση</button>
+    </div>
+  </div>
+
+  <div id="content"></div>
+
+  <script src="../../assets/js/functions.js"></script>
+  <script>
+    if (!localStorage.getItem("jwt")) window.location.href = "../../index.html";
+
+    let allBooks = [];
+    async function renderBooks() {
+      allBooks = await fetchBooks();
+      displayBooks(allBooks);
+    }
+
+    async function performSearch() {
+      const searchTerm = document.getElementById("searchInput").value;
+      const books = await fetchBooks();
+      const filteredBooks = books.filter(book => 
+        book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.isbn.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      if (filteredBooks.length === 0) {
+        document.getElementById("content").innerHTML = '<div class="no-results">Το προϊόν δεν υπάρχει</div>';
+        return;
+      }
+      
+      displayBooks(filteredBooks);
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", performSearch);
+
+    document.getElementById("searchInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        performSearch();
+      }
+    });
+
+    renderBooks();
+  </script>
+</body>
+</html>

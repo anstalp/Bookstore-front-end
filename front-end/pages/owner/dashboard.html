@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Ιδιοκτήτη</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Καλώς ήρθατε</h1>
+            <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <div class="dashboard-grid">
+            <div class="dashboard-card" onclick="window.location.href='books.html'">
+                <div class="card-icon">📚</div>
+                <h2>Διαχείριση Αποθεμάτων</h2>
+                <p>Διαχειριστείτε/Αναζητήστε τα βιβλία και τα αποθέματα</p>
+            </div>
+
+            <div class="dashboard-card" onclick="window.location.href='customers.html'">
+                <div class="card-icon">👥</div>
+                <h2>Πελάτες</h2>
+                <p>Διαχειριστείτε τους πελάτες και τις παραγγελίες</p>
+            </div>
+
+            <div class="dashboard-card" onclick="window.location.href='employees.html'">
+                <div class="card-icon">👥</div>
+                <h2>Εργαζόμενοι</h2>
+                <p>Διαχειριστείτε τους εργαζόμενους</p>
+            </div>
+
+            <div class="dashboard-card" onclick="window.location.href='statistics.html'">
+                <div class="card-icon">📊</div>
+                <h2>Στατιστικά</h2>
+                <p>Δείτε τα στατιστικά της βιβλιοθήκης</p>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="../../assets/js/functions.js"></script>
+    <script>
+        // Check authentication
+        if (!localStorage.getItem("jwt")) {
+            window.location.href = '../../index.html';
+        }
+    </script>
+</body>
+</html>

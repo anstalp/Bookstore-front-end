@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Πελάτη</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Καλώς ήρθατε!</h1>
+            <button class="logout-btn" onclick="logout()">Αποσύνδεση</button>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <div class="dashboard-grid centered-grid">
+            <button class="dashboard-card" id="books-btn" onclick="window.location.href='books.html'">
+                <div class="card-icon">📚</div>
+                <h2>Αναζήτηση Αποθεμάτων</h2>
+                <p>Περιηγηθείτε στη συλλογή των βιβλίων</p>
+            </button>
+
+            <button class="dashboard-card" id="favorites-btn" onclick="window.location.href='favorites.html'">
+                <div class="card-icon">❤️</div>
+                <h2>Αγαπημένα</h2>
+                <p>Δείτε την λίστα επιθυμιών σας</p>
+            </button>
+
+            <button class="dashboard-card" id="orders-btn" onclick="window.location.href='orders.html'">
+                <div class="card-icon">🛒</div>
+                <h2>Παραγγελίες</h2>
+                <p>Δείτε το ιστορικό των παραγγελιών σας</p>
+            </button>
+        </div>
+    </main>
+
+    <script src="../../assets/js/functions.js"></script>
+    <script>
+        // Check authentication, else redirect to login page
+        function checkAuth() {
+            if (!localStorage.getItem("jwt")) {
+                window.location.href = '../../index.html';
+                return;
+            }
+        }
+        checkAuth();
+
+        // Buttons
+        document.getElementById('books-btn').addEventListener('click', () => {
+            window.location.href = 'books.html';
+        });
+
+        document.getElementById('favorites-btn').addEventListener('click', () => {
+            window.location.href = 'favorites.html';
+        });
+
+        document.getElementById('orders-btn').addEventListener('click', () => {
+            window.location.href = 'orders.html';
+        });
+    </script>
+</body>
+</html>
